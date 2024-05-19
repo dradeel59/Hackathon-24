@@ -1,18 +1,34 @@
 import tkinter as tk
-from tkinter import messagebox, Tk, PhotoImage
+from tkinter import messagebox, Tk, PhotoImage, Canvas
+from PIL import Image, ImageTk
 import random
-
-
 
 class SudokuApp:
     def __init__(self, master):
         self.master = master
         master.title("Sudoku Application")
-        # self.master.widget.configure(bg="light gray")
+        
+        self.canvas = Canvas(master, width=600, height=600)
+        self.canvas.pack(fill="both", expand=True)
+        
+        background_image_path = "full_width-d.png"  # Replace with your image path
+        self.background_image = PhotoImage(file=background_image_path)
+        self.canvas.create_image(0, 0, image=self.background_image, anchor="nw")
+        
         self.menu_screen()
 
     def menu_screen(self):
         self.clear_screen()
+
+        self.canvas = Canvas(self.master, width=600, height=600)
+        self.canvas.pack(fill="both", expand=True)
+        
+        background_image_path = "full_width.png"  # Replace with your image path
+        # self.background_image = Image.open(background_image_path)
+        # self.background_image = self.background_image.resize((600, 600))
+        # self.background_image = ImageTk.PhotoImage(self.background_image)
+        self.background_image = PhotoImage(file=background_image_path)
+        self.canvas.create_image(0, 0, image=self.background_image, anchor="nw")
 
         self.menu_label = tk.Label(self.master, text="Welcome to Sudoku Solver", font=("Helvetica", 16))
         self.menu_label.pack(pady=20)
@@ -32,35 +48,32 @@ class SudokuGUI:
     def __init__(self, master):
         self.master = master
 
-        background_image_path = "full_width.png"  # Replace with your image path
-        background_image = PhotoImage(file=background_image_path)
-        # background_label = tk.Label(master=root, image=background_image)
-        # background_label.pack(side="top", fill="both", expand=True)
-        # background_label.grid(row=0, column=0, rowspan=1)  # Adjust rowspan as needed
+        self.canvas = Canvas(master, width=600, height=600)
+        self.canvas.pack(fill="both", expand=True)
+        
+        background_image_path = "full_width-d.png"  # Replace with your image path
+        self.background_image = PhotoImage(file=background_image_path)
+        self.canvas.create_image(0, 0, image=self.background_image, anchor="nw")
 
-
-        self.cells = [[tk.Entry(master, width=10, justify='center', background_="Light Gray", 
-                                font= "Arial", borderwidth=2)
+        self.cells = [[tk.Entry(self.canvas, width=5, justify='center', font="Arial", borderwidth=2)
                        for _ in range(9)] for _ in range(9)]
         for i in range(9):
             for j in range(9):
-                self.cells[i][j].grid(row=i, column=j)
+                self.canvas.create_window(50 * j + 25, 50 * i + 25, window=self.cells[i][j])
 
         self.solve_button = tk.Button(master, text="Solve", command=self.solve, background="salmon4", pady=5, padx=10, font="Arial")
-        self.solve_button.grid(row=10, column=2,  pady=10)
+        self.canvas.create_window(250, 500, window=self.solve_button)
 
-        self.clear_button = tk.Button(master, text="Clear", command=self.clear,)
-        self.clear_button.grid(row=10, column=3,  pady=10)
+        self.clear_button = tk.Button(master, text="Clear", command=self.clear)
+        self.canvas.create_window(300, 500, window=self.clear_button)
 
         self.generate_button = tk.Button(master, text="Generate", command=self.generate)
-        self.generate_button.grid(row=10, column=4,  pady=10)
+        self.canvas.create_window(350, 500, window=self.generate_button)
 
         self.check_button = tk.Button(master, text="Check", command=self.check)
-        self.check_button.grid(row=10, column=5,  pady=20 )
+        self.canvas.create_window(400, 500, window=self.check_button)
 
-        # self.hint_button = tk.Button(master, text="Hint", command=self.hint)
-
-    def hint():
+    def hint(self):
         pass
 
     def get_board(self):
@@ -110,12 +123,9 @@ class SudokuGUI:
 
     def generate_sudoku(self):
         board = [[0 for _ in range(9)] for _ in range(9)]
-        # Fill the diagonal 3x3 boxes to ensure the puzzle is valid
         for i in range(0, 9, 3):
             self.fill_box(board, i, i)
-        # Fill the rest of the board
         self.solve_sudoku(board)
-        # Remove elements to leave only nine unique digits
         self.keep_only_unique_elements(board)
         return board
 
@@ -149,12 +159,10 @@ class SudokuGUI:
         return None
 
     def is_valid(self, board, num, row, col):
-        # Check row and column
         for i in range(9):
             if (board[row][i] == num and i != col) or (board[i][col] == num and i != row):
                 return False
 
-        # Check 3x3 box
         box_x = row // 3
         box_y = col // 3
         for i in range(box_x * 3, box_x * 3 + 3):
@@ -172,32 +180,26 @@ class SudokuGUI:
         random.shuffle(unique_elements)
         
         filled_positions = []
+
+        # Choose the number of instances to keep for each unique element
+        num_instances_to_keep = 7  # Adjust this number to increase or decrease the filled cells
         
         for num in unique_elements:
+            instances_found = 0
             for r, c in all_positions:
                 if board[r][c] == num:
                     filled_positions.append((r, c))
-                    break
-        
+                    instances_found += 1
+                    if instances_found >= num_instances_to_keep:
+                        break
+
         for r in range(9):
-             for c in range(9):
-                 if (r, c) not in filled_positions:
-                     board[r][c] = 0
-
-        # for r in range(9):
-        #     for c in range(9):
-        #         if (r, c) not in elements_to_keep:
-        #             board[r][c] = 0
-
+            for c in range(9):
+                if (r, c) not in filled_positions:
+                    board[r][c] = 0  
+ 
 if __name__ == "__main__":
     root = tk.Tk()
     root.configure(padx=20, pady=15, background="tan")
     app = SudokuApp(root)
-
-     # Background image with opacity
-    # background_image_path = "full_width-d.png"
-    # background_image = PhotoImage(file=background_image_path)
-    # background_label = tk.Label(root, image=background_image, bg="gray80")  # Adjust opacity
-    # background_label.pack(side="top", fill="both", expand=True)
-
     root.mainloop()
